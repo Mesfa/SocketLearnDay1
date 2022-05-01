@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Scanner;
 
 /*
@@ -25,17 +26,33 @@ public class Mycli {
             //写数据
             os.write(msg.getBytes(StandardCharsets.UTF_8));
             //接受数据
+            int i,cn = 1,iRes;
             InputStream is = socket.getInputStream();
             //读数据
-            byte[] bytes = new byte[1024];
-            int n = is.read(bytes);
-            System.out.println("服务器回："+new String(bytes,0,n));
-            //关闭输出
-            os.close();
-            //关闭接受
-            is.close();
-            //关闭套接字
-            socket.close();
+            byte[] recvBuf = new byte[1024];
+            do {
+                //接收服务器发的信息
+                iRes = is.read(recvBuf);
+                if (iRes > 0) {
+                    System.out.println("\nRecv" + iRes + "bytes");
+                    String encoded = Base64.getEncoder().encodeToString(recvBuf);//base64encode
+                    byte[] decode = Base64.getDecoder().decode(encoded);
+                    System.out.println(new String(decode));
+                } else {
+                    if (iRes == -1) {
+                        System.out.println("关闭连接");
+                        break;
+                    }
+                }
+            }
+                while (iRes > 0);
+                    OutputStream os1 = socket.getOutputStream();
+                    os1.write(msg.getBytes());
+                    os1.flush();
+                    os1.close();
+                    is.close();
+
+
         } catch (IOException e) {
             e.printStackTrace();
         }
